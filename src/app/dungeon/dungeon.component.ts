@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, output } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
@@ -33,6 +33,7 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
   imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent],
 })
 export class Dungeon {
+  start = output<boolean>();
   layout = generateDungeonLayout(30, 30);
   store = injectStore();
 
