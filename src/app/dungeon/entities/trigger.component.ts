@@ -14,7 +14,7 @@ import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from 'three';
     <ngt-object3D rigidBody="fixed" [position]="positionVector()">
       <ngt-mesh>
         <ngt-box-geometry *args="[1, 1]" />
-        <ngt-mesh-basic-material color="red" />
+        <ngt-mesh-basic-material color="red" [transparent]="true" [opacity]="0.3" />
       </ngt-mesh>
 
       <ngt-object3D
