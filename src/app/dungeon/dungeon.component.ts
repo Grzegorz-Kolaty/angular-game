@@ -9,7 +9,7 @@ import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
 import { WallComponent } from './entities/wall.component';
-import { generateDungeonLayout } from './utils/generate-dungeon';
+import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
 
 @Component({
   selector: 'dungeon-scene',
@@ -40,6 +40,8 @@ export class Dungeon {
 
   start = output<boolean>();
   layout = generateDungeonLayout(30, 30);
+  deadEnds = getDeadEnds(this.layout);
+  entrance = Math.floor(this.layout.length / 2);
 
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');

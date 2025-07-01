@@ -55,3 +55,25 @@ export function generateDungeonLayout(w: number, h: number): string[][] {
 
   return grid;
 }
+
+export function getDeadEnds(grid: string[][]) {
+  const height = grid.length;
+  const width = grid[0].length;
+  const deadEnds: [number, number][] = [];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (grid[y][x] === '0') {
+        const neighbors = [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ]
+          .map(([dx, dy]) => grid[y + dy]?.[x + dx] === '0')
+          .filter(Boolean).length;
+        if (neighbors === 1) deadEnds.push([x, y]);
+      }
+    }
+  }
+  return deadEnds;
+}
