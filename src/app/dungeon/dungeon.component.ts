@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, effect, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, output, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
 import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
 import { Euler } from 'three';
+import { GameService } from '../shared/data-access/game.service';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
@@ -30,7 +31,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         }
 
         <!-- entrance -->
-        <dungeon-trigger [position]="[-this.entrance + 1.5, 0.5, 0.5]" (intersectionExit)="entranceClosed.set(true)" />
+        <dungeon-trigger [position]="[-this.entrance + 1.5, 0.5, 0.5]" (intersectionExit)="onEntranceExit()" />
         @if (entranceClosed()) {
           <dungeon-wall [position]="[-this.entrance - 0.5, 0.5, 0.5]" />
         }
@@ -56,6 +57,7 @@ export class Dungeon {
   start = output<boolean>();
 
   store = injectStore();
+  gameService = inject(GameService);
   entranceClosed = signal(false);
 
   layout = generateDungeonLayout(30, 30);
@@ -80,5 +82,10 @@ export class Dungeon {
       const euler = new Euler(0, -(Math.PI / 2), 0, 'YXZ');
       this.store.camera().quaternion.setFromEuler(euler);
     });
+  }
+
+  onEntranceExit() {
+    this.entranceClosed.set(true);
+    this.gameService.flashText.set('Find the artifacts... do not get caught.');
   }
 }

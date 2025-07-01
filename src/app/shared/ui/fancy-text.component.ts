@@ -17,11 +17,12 @@ import { ChangeDetectionStrategy, Component, effect, ElementRef, input, untracke
     }
 
     .fancy-text {
+      text-align: center;
       font-size: 4rem;
       font-weight: bold;
       position: relative;
-      animation: melt 3.5s ease-out forwards;
-      background: linear-gradient(90deg, #ac3232, #df7126, #ac3232);
+      animation: melt 6.5s ease-out forwards;
+      background: white;
       background-clip: text;
       z-index: 10000;
       color: transparent;
@@ -35,11 +36,11 @@ import { ChangeDetectionStrategy, Component, effect, ElementRef, input, untracke
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, #ac3232, #df7126, #ac3232);
+      background: white;
       background-clip: text;
       color: transparent;
       transform: scaleY(1);
-      animation: drip 1.5s ease-out forwards;
+      animation: drip 3.5s ease-out forwards;
     }
 
     .fancy-text::after {
