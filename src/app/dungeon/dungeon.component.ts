@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, output, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
@@ -8,6 +8,7 @@ import { Euler } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
+import { TriggerComponent } from './entities/trigger.component';
 import { WallComponent } from './entities/wall.component';
 import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
 
@@ -27,18 +28,36 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
             }
           }
         }
+
+        <!-- entrance -->
+        <dungeon-trigger [position]="[-this.entrance + 1.5, 0.5, 0.5]" (intersectionExit)="entranceClosed.set(true)" />
+        @if (entranceClosed()) {
+          <dungeon-wall [position]="[-this.entrance - 0.5, 0.5, 0.5]" />
+        }
+
+        <!-- dead end cubes -->
       </ng-template>
     </ngtr-physics>
 
     <ngts-pointer-lock-controls />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent, NgtsPointerLockControls],
+  imports: [
+    NgtrPhysics,
+    FloorComponent,
+    RoofComponent,
+    PlayerComponent,
+    WallComponent,
+    TriggerComponent,
+    NgtsPointerLockControls,
+  ],
 })
 export class Dungeon {
-  store = injectStore();
-
   start = output<boolean>();
+
+  store = injectStore();
+  entranceClosed = signal(false);
+
   layout = generateDungeonLayout(30, 30);
   deadEnds = getDeadEnds(this.layout);
   entrance = Math.floor(this.layout.length / 2);
