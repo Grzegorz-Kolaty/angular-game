@@ -9,13 +9,13 @@ import { FancyTextComponent } from './shared/ui/fancy-text.component';
     <ngt-canvas>
       <dungeon-scene (start)="onCreate()" *canvasContent />
     </ngt-canvas>
-    <app-fancy-text text="Enter. Find the artifacts. Escape." />
+    <app-fancy-text text="Enter" />
   `,
   host: { class: 'block h-dvh w-full' },
   imports: [NgtCanvas, Dungeon, FancyTextComponent],
 })
 export class AppComponent {
   onCreate() {
-    console.log('!!!!!!');
+    console.log('create');
   }
 }

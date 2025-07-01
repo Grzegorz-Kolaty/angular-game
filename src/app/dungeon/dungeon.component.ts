@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, output } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
 import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
+import { Euler } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
@@ -34,6 +36,8 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
   imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent, NgtsPointerLockControls],
 })
 export class Dungeon {
+  store = injectStore();
+
   start = output<boolean>();
   layout = generateDungeonLayout(30, 30);
 
@@ -48,4 +52,12 @@ export class Dungeon {
     }, new Set<string>()),
   );
   wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
+
+  constructor() {
+    // set default camera angle
+    effect(() => {
+      const euler = new Euler(0, -(Math.PI / 2), 0, 'YXZ');
+      this.store.camera().quaternion.setFromEuler(euler);
+    });
+  }
 }
