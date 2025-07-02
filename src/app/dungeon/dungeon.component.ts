@@ -25,11 +25,14 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
             @if (wall === '1') {
-              <dungeon-wall [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" />
+              <!-- <dungeon-wall [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" /> -->
             }
             @if (deadEnds[x]; as deadEndRow) {
               @if (deadEndRow[y]) {
-                <dungeon-trigger [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" />
+                <dungeon-trigger
+                  (intersectionEnter)="collectArtifact()"
+                  [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]"
+                />
               }
             }
           }
@@ -97,5 +100,20 @@ export class Dungeon {
   onEntranceExit() {
     this.entranceClosed.set(true);
     this.gameService.flashText.set('Find the artifacts... do not get caught.');
+  }
+
+  collectArtifact() {
+    console.log(this.store.camera().position);
+    // TODO: remove deadEnd
+    const artifactsCollected = this.gameService.artifactsCollected() + 1;
+    const artifactsRemaining = 3 - artifactsCollected;
+    this.gameService.artifactsCollected.set(artifactsCollected);
+
+    if (artifactsRemaining > 0) {
+      this.gameService.flashText.set(`${artifactsRemaining}  artifacts remain`);
+    } else {
+      this.entranceClosed.set(false);
+      this.gameService.flashText.set(`The passage is open. Escape.`);
+    }
   }
 }

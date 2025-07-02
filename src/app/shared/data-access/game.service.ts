@@ -5,4 +5,5 @@ import { Injectable, signal } from '@angular/core';
 })
 export class GameService {
   flashText = signal('');
+  artifactsCollected = signal(0);
 }
