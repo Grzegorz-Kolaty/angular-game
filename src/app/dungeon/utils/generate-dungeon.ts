@@ -56,10 +56,11 @@ export function generateDungeonLayout(w: number, h: number): string[][] {
   return grid;
 }
 
-export function getDeadEnds(grid: string[][]) {
+export function getDeadEnds(grid: string[][]): boolean[][] {
   const height = grid.length;
   const width = grid[0].length;
-  const deadEnds: [number, number][] = [];
+  // boolean map of dead-end cells, indexed by [x][y]
+  const deadEnds: boolean[][] = Array.from({ length: width }, () => Array(height).fill(false));
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (grid[y][x] === '0') {
@@ -71,7 +72,7 @@ export function getDeadEnds(grid: string[][]) {
         ]
           .map(([dx, dy]) => grid[y + dy]?.[x + dx] === '0')
           .filter(Boolean).length;
-        if (neighbors === 1) deadEnds.push([x, y]);
+        if (neighbors === 1) deadEnds[x][y] = true;
       }
     }
   }
