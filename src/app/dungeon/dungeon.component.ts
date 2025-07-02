@@ -29,7 +29,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
             }
             @if (deadEnds[x]; as deadEndRow) {
               @if (deadEndRow[y]) {
-                <dungeon-trigger [position]="[x - (layout[0].length - 1) / 2, 2.5, y - (layout.length - 1) / 2]" />
+                <dungeon-trigger [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" />
               }
             }
           }
