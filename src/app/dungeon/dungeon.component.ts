@@ -29,7 +29,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
             }
             @if (deadEnds[x]; as deadEndRow) {
               @if (deadEndRow[y]) {
-                <dungeon-trigger [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" />
+                <dungeon-trigger [position]="[x - (layout[0].length - 1) / 2, 2.5, y - (layout.length - 1) / 2]" />
               }
             }
           }
@@ -67,7 +67,12 @@ export class Dungeon {
 
   layout = generateDungeonLayout(30, 30);
   entrance = Math.floor(this.layout.length / 2);
-  deadEnds = getDeadEnds(this.layout).map((x) => (!x[this.entrance] ? x : false));
+  deadEnds = (() => {
+    const grid = getDeadEnds(this.layout);
+    const coords = grid.flatMap((col, x) => col.flatMap((v, y) => (v && y !== this.entrance ? [[x, y]] : [])));
+    const picks = coords.sort(() => Math.random() - 0.5).slice(0, 3);
+    return grid.map((col, x) => col.map((_, y) => picks.some(([px, py]) => px === x && py === y)));
+  })();
 
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
