@@ -25,7 +25,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
             @if (wall === '1') {
-              <!-- <dungeon-wall [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" /> -->
+              <dungeon-wall [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" />
             }
             @if (remainingDeadEnds()[x]; as deadEndRow) {
               @if (deadEndRow[y]) {
