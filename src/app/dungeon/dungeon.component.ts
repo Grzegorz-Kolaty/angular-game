@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
@@ -27,10 +27,10 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
             @if (wall === '1') {
               <!-- <dungeon-wall [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" /> -->
             }
-            @if (deadEnds[x]; as deadEndRow) {
+            @if (remainingDeadEnds()[x]; as deadEndRow) {
               @if (deadEndRow[y]) {
                 <dungeon-trigger
-                  (intersectionEnter)="collectArtifact()"
+                  (intersectionEnter)="collectArtifact(x, y)"
                   [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]"
                 />
               }
@@ -70,12 +70,20 @@ export class Dungeon {
 
   layout = generateDungeonLayout(30, 30);
   entrance = Math.floor(this.layout.length / 2);
-  deadEnds = (() => {
+
+  initialDeadEnds = (() => {
     const grid = getDeadEnds(this.layout);
     const coords = grid.flatMap((col, x) => col.flatMap((v, y) => (v && y !== this.entrance ? [[x, y]] : [])));
     const picks = coords.sort(() => Math.random() - 0.5).slice(0, 3);
     return grid.map((col, x) => col.map((_, y) => picks.some(([px, py]) => px === x && py === y)));
   })();
+
+  remainingDeadEnds = computed(() => {
+    const collected = this.gameService.collectedArtifacts();
+    return this.initialDeadEnds.map((col, x) =>
+      col.map((isEnd, y) => isEnd && !collected.some(([cx, cy]) => cx === x && cy === y)),
+    );
+  });
 
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
@@ -102,18 +110,16 @@ export class Dungeon {
     this.gameService.flashText.set('Find the artifacts... do not get caught.');
   }
 
-  collectArtifact() {
-    console.log(this.store.camera().position);
-    // TODO: remove deadEnd
-    const artifactsCollected = this.gameService.artifactsCollected() + 1;
-    const artifactsRemaining = 3 - artifactsCollected;
-    this.gameService.artifactsCollected.set(artifactsCollected);
-
-    if (artifactsRemaining > 0) {
-      this.gameService.flashText.set(`${artifactsRemaining}  artifacts remain`);
+  collectArtifact(x: number, y: number) {
+    this.gameService.collectedArtifacts.update((artifacts) => [...artifacts, [x, y]]);
+    const remaining = 3 - this.gameService.artifactsCollected();
+    if (remaining > 0) {
+      this.gameService.flashText.set(
+        `${remaining} artifact${remaining > 1 ? 's' : ''} remain${remaining > 1 ? '' : 's'}`,
+      );
     } else {
       this.entranceClosed.set(false);
-      this.gameService.flashText.set(`The passage is open. Escape.`);
+      this.gameService.flashText.set('The passage is open. Escape.');
     }
   }
 }

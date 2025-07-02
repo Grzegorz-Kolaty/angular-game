@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameService {
   flashText = signal('');
-  artifactsCollected = signal(0);
+  collectedArtifacts = signal<number[][]>([]);
+  artifactsCollected = computed(() => this.collectedArtifacts().length);
 }
