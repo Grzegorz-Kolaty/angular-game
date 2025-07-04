@@ -78,3 +78,34 @@ export function getDeadEnds(grid: string[][]): boolean[][] {
   }
   return deadEnds;
 }
+
+/**
+ * Build a grid of BFS distances from (startX,startY) to every open cell (grid[y][x]==='0').
+ * Unreachable cells remain Infinity.*/
+
+export function computeDistanceMap(grid: string[][], startX: number, startY: number): number[][] {
+  const H = grid.length;
+  const W = grid[0].length;
+  const dist = Array.from({ length: H }, () => Array<number>(W).fill(Infinity));
+  const q: [number, number][] = [[startY, startX]];
+  dist[startY][startX] = 0;
+  const dirs: [number, number][] = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ];
+  while (q.length) {
+    const [y, x] = q.shift()!;
+    const d0 = dist[y][x] + 1;
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx,
+        ny = y + dy;
+      if (ny >= 0 && ny < H && nx >= 0 && nx < W && grid[ny][nx] === '0' && dist[ny][nx] === Infinity) {
+        dist[ny][nx] = d0;
+        q.push([ny, nx]);
+      }
+    }
+  }
+  return dist;
+}

@@ -23,13 +23,13 @@ export class PlayerComponent {
   layout = input.required<string[][]>();
   wasd = input.required<Set<string>>();
 
-  player = viewChild.required<NgtrRigidBody>('player');
+  player = viewChild<NgtrRigidBody>('player');
 
   constructor() {
     extend({ Object3D });
 
     beforeRender(({ delta, camera }) => {
-      const body = this.player().rigidBody();
+      const body = this.player()?.rigidBody();
       if (!body) return;
 
       // sync camera position with physics body
