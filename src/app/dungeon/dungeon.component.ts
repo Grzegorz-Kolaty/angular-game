@@ -33,6 +33,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
               @if (deadEndRow[y]) {
                 <dungeon-trigger
                   (intersectionEnter)="collectArtifact(x, y)"
+                  [transparency]="0.3"
                   [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]"
                 />
               }
@@ -41,7 +42,11 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         }
 
         <!-- entrance -->
-        <dungeon-trigger [position]="[-this.entrance + 1.5, 0.5, 0.5]" (intersectionExit)="onEntranceExit()" />
+        <dungeon-trigger
+          [transparency]="0"
+          [position]="[-this.entrance + 1.5, 0.5, 0.5]"
+          (intersectionExit)="onEntranceExit()"
+        />
         @if (entranceClosed()) {
           <dungeon-wall [position]="[-this.entrance - 0.5, 0.5, 0.5]" />
         }

@@ -14,7 +14,7 @@ import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from 'three';
     <ngt-object3D rigidBody="fixed" [position]="positionVector()">
       <ngt-mesh>
         <ngt-box-geometry *args="[1, 1]" />
-        <ngt-mesh-basic-material color="red" [transparent]="true" [opacity]="0.3" />
+        <ngt-mesh-basic-material color="red" [transparent]="true" [opacity]="this.transparency() ?? 1" />
       </ngt-mesh>
 
       <ngt-object3D
@@ -31,6 +31,7 @@ import { BoxGeometry, Mesh, MeshBasicMaterial, Object3D, Vector3 } from 'three';
 })
 export class TriggerComponent {
   position = input.required<[number, number, number]>();
+  transparency = input<number>();
   intersectionEnter = output<NgtrIntersectionEnterPayload>();
   intersectionExit = output<NgtrIntersectionExitPayload>();
   positionVector = computed(() => new Vector3(this.position()[0], this.position()[1], this.position()[2]));
