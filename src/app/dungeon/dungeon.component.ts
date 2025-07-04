@@ -72,7 +72,7 @@ export class Dungeon {
 
   store = injectStore();
   gameService = inject(GameService);
-  entranceClosed = signal(false);
+  entranceClosed = signal<null | boolean>(null);
   gameOver = signal(false);
 
   layout = generateDungeonLayout(30, 30);
@@ -119,12 +119,15 @@ export class Dungeon {
       this.gameService.flashText.set('This will be your tomb');
       // hack to make it unwinnable
       this.requiredArtifacts = 50;
+      this.entranceClosed.set(true);
     });
   }
 
   onEntranceExit() {
-    this.entranceClosed.set(true);
-    this.gameService.flashText.set('Find the artifacts... do not get caught.');
+    if (this.entranceClosed() === null) {
+      this.entranceClosed.set(true);
+      this.gameService.flashText.set('Find the artifacts... do not get caught.');
+    }
   }
 
   collectArtifact(x: number, y: number) {

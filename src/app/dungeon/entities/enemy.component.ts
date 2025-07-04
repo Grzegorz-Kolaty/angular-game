@@ -91,7 +91,7 @@ export class EnemyComponent {
         const targetX = bestX - (W - 1) / 2;
         const targetZ = bestY - (H - 1) / 2;
         const dir = new Vector3(targetX - t.x, 0, targetZ - t.z).normalize();
-        body.setLinvel({ x: dir.x * 1.5, y: 0, z: dir.z * 1.5 }, true);
+        body.setLinvel({ x: dir.x * 0.8, y: 0, z: dir.z * 0.8 }, true);
       } else {
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
       }
