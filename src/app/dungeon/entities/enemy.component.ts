@@ -122,6 +122,8 @@ export class EnemyComponent {
   }
 
   onCollision(ev: NgtrCollisionEnterPayload) {
-    this.caught.emit(ev);
+    if (ev.other.rigidBody) {
+      this.caught.emit(ev);
+    }
   }
 }

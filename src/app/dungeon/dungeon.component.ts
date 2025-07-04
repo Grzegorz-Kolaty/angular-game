@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { injectStore } from 'angular-three';
-import { NgtrCollisionEnterPayload, NgtrPhysics } from 'angular-three-rapier';
+import { NgtrPhysics } from 'angular-three-rapier';
 import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
 import { Euler } from 'three';
@@ -22,7 +22,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
         <dungeon-player [layout]="layout" [wasd]="wasd()" />
-        <dungeon-enemy [layout]="layout" (caught)="handleGameOver($event)" />
+        <dungeon-enemy [layout]="layout" (caught)="gameOver.set(true)" />
 
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
@@ -68,6 +68,7 @@ export class Dungeon {
   store = injectStore();
   gameService = inject(GameService);
   entranceClosed = signal(false);
+  gameOver = signal(false);
 
   layout = generateDungeonLayout(30, 30);
   entrance = Math.floor(this.layout.length / 2);
@@ -104,6 +105,13 @@ export class Dungeon {
       const euler = new Euler(0, -(Math.PI / 2), 0, 'YXZ');
       this.store.camera().quaternion.setFromEuler(euler);
     });
+
+    effect(() => {
+      const gameOver = this.gameOver();
+      if (!gameOver) return;
+
+      this.gameService.flashText.set('This will be your tomb');
+    });
   }
 
   onEntranceExit() {
@@ -121,12 +129,6 @@ export class Dungeon {
     } else {
       this.entranceClosed.set(false);
       this.gameService.flashText.set('The passage is open. Escape.');
-    }
-  }
-
-  handleGameOver(ev: NgtrCollisionEnterPayload) {
-    if (ev.other.rigidBody) {
-      this.gameService.flashText.set('This will be your tomb');
     }
   }
 }
