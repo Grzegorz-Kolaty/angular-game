@@ -6,6 +6,7 @@ import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
 import { Euler } from 'three';
 import { GameService } from '../shared/data-access/game.service';
+import { EnemyComponent } from './entities/enemy.component';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
@@ -21,6 +22,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
         <dungeon-player [layout]="layout" [wasd]="wasd()" />
+        <dungeon-enemy [layout]="layout" />
 
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
@@ -56,6 +58,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
     FloorComponent,
     RoofComponent,
     PlayerComponent,
+    EnemyComponent,
     WallComponent,
     TriggerComponent,
     NgtsPointerLockControls,
