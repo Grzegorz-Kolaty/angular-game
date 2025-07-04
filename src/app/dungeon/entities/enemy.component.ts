@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, input, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+  input,
+  output,
+  viewChild,
+} from '@angular/core';
 import { beforeRender, extend, NgtArgs } from 'angular-three';
 import { NgtrCollisionEnterPayload, NgtrCuboidCollider, NgtrRigidBody } from 'angular-three-rapier';
 import { Object3D, Vector3 } from 'three';
@@ -27,6 +35,7 @@ import { computeDistanceMap } from '../utils/generate-dungeon';
 })
 export class EnemyComponent {
   layout = input.required<string[][]>();
+  caught = output<NgtrCollisionEnterPayload>();
   enemy = viewChild.required<NgtrRigidBody>('enemy');
   enemyStartPosition = computed(() => this.getEnemyStartPosition(this.layout()));
 
@@ -109,12 +118,10 @@ export class EnemyComponent {
     }
     const worldX = sx - (W - 1) / 2;
     const worldZ = sy - (H - 1) / 2;
-    console.log(worldX, 0.5, worldZ);
     return { x: worldX, y: 0.5, z: worldZ };
   }
 
   onCollision(ev: NgtrCollisionEnterPayload) {
-    // TODO: handle player collision (e.g. game over)
-    console.log('Enemy collided with', ev.other);
+    this.caught.emit(ev);
   }
 }

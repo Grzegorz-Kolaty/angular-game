@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, output, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { injectStore } from 'angular-three';
-import { NgtrPhysics } from 'angular-three-rapier';
+import { NgtrCollisionEnterPayload, NgtrPhysics } from 'angular-three-rapier';
 import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
 import { Euler } from 'three';
@@ -22,7 +22,7 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
         <dungeon-player [layout]="layout" [wasd]="wasd()" />
-        <dungeon-enemy [layout]="layout" />
+        <dungeon-enemy [layout]="layout" (caught)="handleGameOver($event)" />
 
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
@@ -45,8 +45,6 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
         @if (entranceClosed()) {
           <dungeon-wall [position]="[-this.entrance - 0.5, 0.5, 0.5]" />
         }
-
-        <!-- dead end cubes -->
       </ng-template>
     </ngtr-physics>
 
@@ -123,6 +121,12 @@ export class Dungeon {
     } else {
       this.entranceClosed.set(false);
       this.gameService.flashText.set('The passage is open. Escape.');
+    }
+  }
+
+  handleGameOver(ev: NgtrCollisionEnterPayload) {
+    if (ev.other.rigidBody) {
+      this.gameService.flashText.set('This will be your tomb');
     }
   }
 }
