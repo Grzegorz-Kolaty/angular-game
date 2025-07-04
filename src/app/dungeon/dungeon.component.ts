@@ -72,6 +72,7 @@ export class Dungeon {
 
   layout = generateDungeonLayout(30, 30);
   entrance = Math.floor(this.layout.length / 2);
+  requiredArtifacts = 2;
 
   initialDeadEnds = (() => {
     const grid = getDeadEnds(this.layout);
@@ -111,6 +112,8 @@ export class Dungeon {
       if (!gameOver) return;
 
       this.gameService.flashText.set('This will be your tomb');
+      // hack to make it unwinnable
+      this.requiredArtifacts = 50;
     });
   }
 
@@ -121,7 +124,7 @@ export class Dungeon {
 
   collectArtifact(x: number, y: number) {
     this.gameService.collectedArtifacts.update((artifacts) => [...artifacts, [x, y]]);
-    const remaining = 3 - this.gameService.artifactsCollected();
+    const remaining = this.requiredArtifacts - this.gameService.artifactsCollected();
     if (remaining > 0) {
       this.gameService.flashText.set(
         `${remaining} artifact${remaining > 1 ? 's' : ''} remain${remaining > 1 ? '' : 's'}`,
