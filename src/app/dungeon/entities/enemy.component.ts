@@ -26,7 +26,7 @@ import { computeDistanceMap } from '../utils/generate-dungeon';
       [options]="{ mass: 1, enabledRotations: [false, false, false], canSleep: false }"
     >
       <ngt-mesh>
-        <ngt-box-geometry *args="[1, 2, 1]" />
+        <ngt-box-geometry *args="[1, 2, 1, 8, 8, 8]" />
         <ngt-shader-material
           [parameters]="{
             transparent: true,
@@ -59,25 +59,89 @@ export class EnemyComponent implements AfterViewInit {
     tScene: { value: null as any },
     uTime: { value: 0 },
     uRes: { value: new Vector2(1, 1) },
-    uDistort: { value: 0.022 }, // a bit stronger distortion → more camouflage
-    uEdge: { value: 3.5 }, // sharper edge-only fresnel
-    uAlpha: { value: 0.85 }, // lower base visibility
+
+    // refraction/tint from before
+    uDistort: { value: 0.022 },
+    uEdge: { value: 3.5 },
+    uAlpha: { value: 0.33 },
     uCapture: { value: 0 },
-    uTint: { value: new Vector3(0.0, 0.0, 0.0) },
-    uTintStrength: { value: 0.02 }, // try 0.00–0.05; set 0 to remove blue completely
+    uTint: { value: new Vector3(0.6, 0.45, 0.9) },
+    uTintStrength: { value: 0.015 },
+
+    // geometric/glitch warps
+    uWarpPx: { value: 90 }, // max screen-space warp in pixels
+    uModelWarp: { value: 1.1 }, // push along view dir in world units (meters)
+    uNoiseScale: { value: 8.0 }, // controls world wobble frequency
+    uGlitch: { value: 1.0 }, // 0..1 master intensity
   };
 
   cloakVert = `
-    varying vec3 vNormalV;
-    void main() {
-      vNormalV = normalize(normalMatrix * normal);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `;
+  precision highp float;
+  precision highp int;
+
+  uniform float uTime;
+  uniform float uWarpPx;
+  uniform float uModelWarp;
+  uniform float uNoiseScale;
+  uniform float uGlitch;
+  uniform vec2  uRes;
+  // DO NOT redeclare cameraPosition here; ShaderMaterial injects:
+  // uniform vec3 cameraPosition;
+
+  varying vec3 vNormalV;
+
+  float wob(vec3 p, float s, float t){
+    return (
+      sin(p.x*s*0.21 + t*0.9) +
+      sin(p.y*s*0.27 - t*1.2) +
+      sin(p.z*s*0.19 + t*1.1)
+    ) * (1.0/3.0);
+  }
+
+  void main(){
+    float t = uTime;
+
+    // world space position
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+
+    // push toward camera (world tear)
+    float w = wob(wp.xyz, uNoiseScale, t);
+    vec3 toCam = normalize(cameraPosition - wp.xyz);
+    float burst = smoothstep(0.75, 0.98, sin(t*0.7) * sin(t*1.21));
+    wp.xyz += toCam * (uModelWarp * w * (0.6 + 1.4 * burst) * uGlitch);
+
+    // project to clip
+    vec4 clip = projectionMatrix * viewMatrix * wp;
+
+    // screen-space (NDC) warp — huge/glitchy
+    vec2 ndc = clip.xy / clip.w;
+
+    vec2 ripple = vec2(
+      sin((ndc.y + w)*40.0 + t*12.0),
+      cos((ndc.x - w)*37.0 - t*11.0)
+    );
+    vec2 sweep = vec2(
+      sin(wp.x*0.03 + t*0.8),
+      cos(wp.z*0.025 - t*1.1)
+    );
+    vec2 ndcOffset = (0.5*ripple + sweep) * (0.4 + 1.6*burst) * uGlitch;
+
+    // pixels → NDC
+    vec2 px2ndc = (2.0 * vec2(uWarpPx)) / uRes;
+    ndc += ndcOffset * px2ndc;
+
+    clip.xy = ndc * clip.w;
+
+    vNormalV = normalize(normalMatrix * normal);
+    gl_Position = clip;
+  }
+`;
 
   // replace your cloakFrag with this whole string
   cloakFrag = `
-  precision mediump float;
+  precision highp float;
+  precision highp int;
+
   uniform sampler2D tScene;
   uniform float uTime, uDistort, uEdge, uAlpha, uCapture;
   uniform float uTintStrength;
