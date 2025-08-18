@@ -10,7 +10,7 @@ import { BoxGeometry, Mesh, MeshBasicMaterial, NearestFilter, Object3D, RepeatWr
     <ngt-object3D rigidBody="fixed" [position]="positionVector()">
       <ngt-mesh>
         <ngt-box-geometry />
-        <ngt-mesh-basic-material [map]="wallMap()" [transparent]="true" [opacity]="0.3" />
+        <ngt-mesh-basic-material [map]="wallMap()" />
       </ngt-mesh>
 
       <ngt-object3D [cuboidCollider]="[0.5, 0.5, 0.5]" />
