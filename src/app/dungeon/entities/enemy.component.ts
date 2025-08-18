@@ -19,14 +19,14 @@ import { computeDistanceMap } from '../utils/generate-dungeon';
       #enemy
       rigidBody
       [position]="[enemyStartPosition().x, enemyStartPosition().y, enemyStartPosition().z]"
-      [options]="{ mass: 1, enabledRotations: [false, false, false] }"
+      [options]="{ mass: 1, enabledRotations: [false, false, false], canSleep: false }"
     >
       <ngt-mesh>
         <ngt-box-geometry *args="[0.1, 0.1, 0.1]" />
         <ngt-mesh-basic-material color="purple" />
       </ngt-mesh>
 
-      <ngt-object3D [cuboidCollider]="[0.05, 0.05, 0.05]" (collisionEnter)="onCollision($event)" />
+      <ngt-object3D [cuboidCollider]="[0.06, 0.06, 0.06]" (collisionEnter)="onCollision($event)" />
     </ngt-object3D>
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -42,43 +42,62 @@ export class EnemyComponent {
   constructor() {
     extend({ Object3D });
 
-    // each frame, if the player is inside, chase them via a simple BFS path-follow
-    beforeRender(({ delta, camera }) => {
+    beforeRender(({ camera }) => {
       const body = this.enemy().rigidBody();
       if (!body) return;
 
       const grid = this.layout();
       const H = grid.length;
       const W = grid[0].length;
-      // do not move until the player has entered (x<=0 means inside maze)
-      if (camera.position.x > 0) {
+
+      // player grid cell (clamped + walkable check)
+      const { gx: px, gy: py } = this.toGrid(camera.position.x, camera.position.z, W, H);
+      if (!grid[py]?.[px] || grid[py][px] === '1') {
+        // player outside maze or in a wall -> pause chase
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        body.wakeUp();
         return;
       }
 
-      // BFS distance from player
-      const px = Math.round(camera.position.x + (W - 1) / 2);
-      const py = Math.round(camera.position.z + (H - 1) / 2);
       const distToP = computeDistanceMap(grid, px, py);
 
-      // enemy's grid cell
+      // enemy grid cell
       const t = body.translation();
-      const ex = Math.round(t.x + (W - 1) / 2);
-      const ey = Math.round(t.z + (H - 1) / 2);
+      const { gx: ex, gy: ey } = this.toGrid(t.x, t.z, W, H);
+      const here = distToP[ey]?.[ex];
+      if (here === undefined || here === Infinity) {
+        body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        body.wakeUp();
+        return;
+      }
 
-      // find neighbor with smallest distance
+      // If very close (same tile or adjacent), chase the player's actual world position
+      if (here <= 1) {
+        const toPlayer = new Vector3(camera.position.x - t.x, 0, camera.position.z - t.z);
+        const d = toPlayer.length();
+        if (d > 1e-3) {
+          toPlayer.normalize();
+          // small "arrive" so we don't stall just before touching
+          const speed = Math.min(2.0, 0.8 + d * 2.0);
+          body.setLinvel({ x: toPlayer.x * speed, y: 0, z: toPlayer.z * speed }, true);
+          body.wakeUp();
+        }
+        return;
+      }
+
+      // Otherwise follow the downhill neighbor in the distance field (toward cell centers)
       const dirs: [number, number][] = [
         [1, 0],
         [-1, 0],
         [0, 1],
         [0, -1],
       ];
-      let bestX = ex;
-      let bestY = ey;
-      let bestD = distToP[ey]?.[ex] ?? Infinity;
+      let bestX = ex,
+        bestY = ey,
+        bestD = here;
       for (const [dx, dy] of dirs) {
-        const nx = ex + dx;
-        const ny = ey + dy;
+        const nx = ex + dx,
+          ny = ey + dy;
         const d = distToP[ny]?.[nx];
         if (d !== undefined && d < bestD) {
           bestD = d;
@@ -86,14 +105,22 @@ export class EnemyComponent {
           bestY = ny;
         }
       }
-      // step toward that neighbor
-      if (bestD < (distToP[ey]?.[ex] ?? Infinity)) {
-        const targetX = bestX - (W - 1) / 2;
-        const targetZ = bestY - (H - 1) / 2;
-        const dir = new Vector3(targetX - t.x, 0, targetZ - t.z).normalize();
-        body.setLinvel({ x: dir.x * 0.8, y: 0, z: dir.z * 0.8 }, true);
+
+      if (bestD < here) {
+        const target = this.toWorld(bestX, bestY, W, H);
+        const toCell = new Vector3(target.x - t.x, 0, target.z - t.z);
+        const d = toCell.length();
+        if (d > 1e-3) {
+          toCell.normalize();
+          const speed = Math.min(1.5, 0.6 + d * 1.0); // a touch faster when farther
+          body.setLinvel({ x: toCell.x * speed, y: 0, z: toCell.z * speed }, true);
+        } else {
+          body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        }
+        body.wakeUp();
       } else {
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        body.wakeUp();
       }
     });
   }
@@ -125,5 +152,14 @@ export class EnemyComponent {
     if (ev.other.rigidBody) {
       this.caught.emit(ev);
     }
+  }
+
+  private toGrid(x: number, z: number, W: number, H: number) {
+    // floor maps every point in a cell to that cell; centers are at .5 in world space
+    return { gx: Math.floor(x + W / 2), gy: Math.floor(z + H / 2) };
+  }
+  private toWorld(gx: number, gy: number, W: number, H: number) {
+    // center of a grid cell
+    return { x: gx - W / 2 + 0.5, z: gy - H / 2 + 0.5 };
   }
 }

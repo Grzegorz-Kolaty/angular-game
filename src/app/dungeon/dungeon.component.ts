@@ -116,7 +116,7 @@ export class Dungeon {
       const gameOver = this.gameOver();
       if (!gameOver) return;
 
-      this.gameService.flashText.set('This will be your tomb');
+      this.gameService.flashText.set('The exit has been sealed');
       // hack to make it unwinnable
       this.requiredArtifacts = 50;
       this.entranceClosed.set(true);
