@@ -39,10 +39,10 @@ export class PlayerComponent {
       // movement input relative to camera orientation
       const dir = new Vector3();
       const wasd = this.wasd();
-      if (wasd.has('w')) dir.z -= 1;
-      if (wasd.has('s')) dir.z += 1;
-      if (wasd.has('a')) dir.x -= 1;
-      if (wasd.has('d')) dir.x += 1;
+      if (wasd.has('KeyW') || wasd.has('ArrowUp')) dir.z -= 1;
+      if (wasd.has('KeyS') || wasd.has('ArrowDown')) dir.z += 1;
+      if (wasd.has('KeyA') || wasd.has('ArrowLeft')) dir.x -= 1;
+      if (wasd.has('KeyD') || wasd.has('ArrowRight')) dir.x += 1;
 
       if (dir.lengthSq()) {
         dir

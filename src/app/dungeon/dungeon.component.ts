@@ -93,14 +93,17 @@ export class Dungeon {
     );
   });
 
+  keyCodes = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight']);
+
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
   wasd$ = merge(this.keydown$, this.keyup$).pipe(
-    filter((e) => ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())),
-    scan((acc, curr) => {
-      if (curr.type === 'keyup') acc.delete(curr.key.toLowerCase());
-      if (curr.type === 'keydown') acc.add(curr.key.toLowerCase());
-      return acc;
+    filter((e) => this.keyCodes.has(e.code)),
+    scan((prev, curr) => {
+      const next = new Set(prev);
+      if (curr.type === 'keydown') next.add(curr.code);
+      else next.delete(curr.code);
+      return next;
     }, new Set<string>()),
   );
   wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
