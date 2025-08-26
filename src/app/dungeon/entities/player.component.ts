@@ -1,7 +1,14 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, input, viewChild } from '@angular/core';
-import { beforeRender, extend } from 'angular-three';
-import { NgtrCuboidCollider, NgtrRigidBody } from 'angular-three-rapier';
-import { Object3D, Vector3 } from 'three';
+import {NgtrCuboidCollider, NgtrRigidBody} from "angular-three-rapier";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  EventEmitter, input,
+  Output,
+  viewChild
+} from "@angular/core";
+import {beforeRender, extend} from "angular-three";
+import {Object3D, Vector3} from "three";
 
 @Component({
   selector: 'dungeon-player',
@@ -20,10 +27,15 @@ import { Object3D, Vector3 } from 'three';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerComponent {
+  @Output() positionChange = new EventEmitter<[number, number, number]>();
+
   layout = input.required<string[][]>();
   wasd = input.required<Set<string>>();
 
   player = viewChild<NgtrRigidBody>('player');
+
+  // <-- Deklaracja lastPos
+  private lastPos: [number, number, number] = [-9999, -9999, -9999];
 
   constructor() {
     extend({ Object3D });
@@ -32,11 +44,20 @@ export class PlayerComponent {
       const body = this.player()?.rigidBody();
       if (!body) return;
 
-      // sync camera position with physics body
       const pos = body.translation();
-      camera.position.set(pos.x, pos.y, pos.z);
+      const currentPos: [number, number, number] = [pos.x, pos.y, pos.z];
 
-      // movement input relative to camera orientation
+      // Emituj tylko, jeśli pozycja faktycznie się zmieniła
+      if (
+          currentPos[0] !== this.lastPos[0] ||
+          currentPos[1] !== this.lastPos[1] ||
+          currentPos[2] !== this.lastPos[2]
+      ) {
+        this.lastPos = currentPos;
+        this.positionChange.emit(currentPos);
+      }
+
+      // Ruch gracza
       const dir = new Vector3();
       const wasd = this.wasd();
       if (wasd.has('KeyW') || wasd.has('ArrowUp')) dir.z -= 1;
@@ -45,14 +66,14 @@ export class PlayerComponent {
       if (wasd.has('KeyD') || wasd.has('ArrowRight')) dir.x += 1;
 
       if (dir.lengthSq()) {
-        dir
-          .normalize()
-          .multiplyScalar(100 * delta)
-          .applyQuaternion(camera.quaternion);
+        dir.normalize().multiplyScalar(100 * delta).applyQuaternion(camera.quaternion);
         body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
       } else {
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
       }
+
+      // Synchronizacja kamery
+      camera.position.set(pos.x, pos.y, pos.z);
     });
   }
 }

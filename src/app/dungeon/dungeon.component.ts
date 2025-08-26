@@ -13,6 +13,7 @@ import { RoofComponent } from './entities/roof.component';
 import { TriggerComponent } from './entities/trigger.component';
 import { WallComponent } from './entities/wall.component';
 import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
+import {DungeonModelComponent} from "./entities/model/model.component";
 
 @Component({
   selector: 'dungeon-scene',
@@ -21,8 +22,17 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
       <ng-template>
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
-        <dungeon-player [layout]="layout" [wasd]="wasd()" />
+<!--        <dungeon-player [layout]="layout" [wasd]="wasd()" />-->
         <dungeon-enemy [layout]="layout" (caught)="gameOver.set(true)" />
+        <dungeon-player
+            [layout]="layout"
+            [wasd]="wasd()"
+            (positionChange)="playerPosition.set($event)"
+        />
+
+        <dungeon-model />
+
+
 
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
@@ -65,10 +75,13 @@ import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
     WallComponent,
     TriggerComponent,
     NgtsPointerLockControls,
+    DungeonModelComponent,
   ],
 })
 export class Dungeon {
   start = output<boolean>();
+
+
 
   store = injectStore();
   gameService = inject(GameService);
@@ -76,6 +89,8 @@ export class Dungeon {
   gameOver = signal(false);
 
   layout = generateDungeonLayout(30, 30);
+  playerPosition = signal<[number, number, number]>([-(this.layout.length / 2) - 1, 0.5, 0.5]);
+
   entrance = Math.floor(this.layout.length / 2);
   requiredArtifacts = 2;
 
@@ -124,6 +139,10 @@ export class Dungeon {
       this.requiredArtifacts = 50;
       this.entranceClosed.set(true);
     });
+
+    effect(() => {
+      console.log(this.playerPosition())
+    })
   }
 
   onEntranceExit() {
