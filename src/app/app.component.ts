@@ -6,11 +6,11 @@ import { FancyTextComponent } from './shared/ui/fancy-text.component';
 
 @Component({
   selector: 'app-root',
-  template: `
-      <ngt-canvas>
-          <dungeon-scene (start)="onCreate()" *canvasContent/>
-      </ngt-canvas>
-      <app-fancy-text [text]="gameService.flashText()"/>
+  template: ` 
+    <ngt-canvas [shadows]="true">
+      <dungeon-scene (start)="onCreate()" *canvasContent />
+    </ngt-canvas>
+    <app-fancy-text [text]="gameService.flashText()" />
   `,
   host: { class: 'block h-dvh w-full' },
   imports: [NgtCanvas, Dungeon, FancyTextComponent, NgtCanvasImpl, NgtCanvasContent],

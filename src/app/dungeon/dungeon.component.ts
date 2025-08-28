@@ -13,7 +13,8 @@ import { RoofComponent } from './entities/roof.component';
 import { TriggerComponent } from './entities/trigger.component';
 import { WallComponent } from './entities/wall.component';
 import { generateDungeonLayout, getDeadEnds } from './utils/generate-dungeon';
-import {DungeonModelComponent} from "./entities/model/model.component";
+import { DungeonModelComponent } from './entities/model/model.component';
+
 
 @Component({
   selector: 'dungeon-scene',
@@ -22,17 +23,10 @@ import {DungeonModelComponent} from "./entities/model/model.component";
       <ng-template>
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
-<!--        <dungeon-player [layout]="layout" [wasd]="wasd()" />-->
         <dungeon-enemy [layout]="layout" (caught)="gameOver.set(true)" />
-        <dungeon-player
-            [layout]="layout"
-            [wasd]="wasd()"
-            (positionChange)="playerPosition.set($event)"
-        />
+        <dungeon-player [layout]="layout" [wasd]="wasd()" (positionChange)="playerPosition.set($event)" />
 
-        <dungeon-model />
-
-
+        <!--        <dungeon-model />-->
 
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
@@ -60,7 +54,12 @@ import {DungeonModelComponent} from "./entities/model/model.component";
         @if (entranceClosed()) {
           <dungeon-wall [position]="[-this.entrance - 0.5, 0.5, 0.5]" />
         }
+        
+
+        <dungeon-model></dungeon-model>
+
       </ng-template>
+
     </ngtr-physics>
 
     <ngts-pointer-lock-controls />
@@ -80,8 +79,6 @@ import {DungeonModelComponent} from "./entities/model/model.component";
 })
 export class Dungeon {
   start = output<boolean>();
-
-
 
   store = injectStore();
   gameService = inject(GameService);
@@ -141,8 +138,8 @@ export class Dungeon {
     });
 
     effect(() => {
-      console.log(this.playerPosition())
-    })
+      console.log(this.playerPosition());
+    });
   }
 
   onEntranceExit() {
